@@ -265,10 +265,15 @@
     // 상단 '내 냉장고 속 재료' 렌더링
     function renderSelectedIngredients() {
         const container = document.getElementById('selectedIngredientsContainer');
-        const emptyMsg = document.getElementById('emptyIngredientsMsg');
         container.innerHTML = '';
-        if (myIngredients.size === 0) { container.appendChild(emptyMsg); emptyMsg.style.display = 'block'; return; }
-        emptyMsg.style.display = 'none';
+        if (myIngredients.size === 0) {
+            const emptyMsg = document.createElement('span');
+            emptyMsg.id = 'emptyIngredientsMsg';
+            emptyMsg.className = 'text-gray-400 text-sm';
+            emptyMsg.textContent = '아래에서 재료를 추가하거나 직접 입력해보세요.';
+            container.appendChild(emptyMsg);
+            return;
+        }
         myIngredients.forEach(item => {
             const span = document.createElement('span');
             span.className = 'tag-enter inline-flex items-center gap-1 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full text-sm font-medium border border-orange-200 shadow-sm';
