@@ -236,10 +236,17 @@
             if (e.key === 'Enter') addCustomCondiment();
         });
 
-        document.getElementById('manualAddBtn').addEventListener('click', addManualIngredients);
-        document.getElementById('customIngredientAddBtn').addEventListener('click', addCustomQuickIngredient);
-        document.getElementById('customCondimentAddBtn').addEventListener('click', addCustomCondiment);
-        document.getElementById('submitBtn').addEventListener('click', fetchRecipes);
+    });
+
+
+    // 버튼 이벤트 위임: 정적 버튼도 안정적으로 동작하도록 합니다.
+    document.addEventListener('click', function(event) {
+        const target = event.target.closest('button');
+        if (!target) return;
+        if (target.id === 'manualAddBtn') { event.preventDefault(); addManualIngredients(); }
+        if (target.id === 'customIngredientAddBtn') { event.preventDefault(); addCustomQuickIngredient(); }
+        if (target.id === 'customCondimentAddBtn') { event.preventDefault(); addCustomCondiment(); }
+        if (target.id === 'submitBtn') { event.preventDefault(); fetchRecipes(); }
     });
 
     // 커스텀 알림 함수 (alert 대체)
