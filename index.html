@@ -428,8 +428,8 @@
                 }
             };
 
-            const apiKey = ""; // API 키는 캔버스 런타임에서 자동 주입됩니다.
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            // API 키는 Vercel 서버리스 함수의 환경변수에서만 사용합니다.
+            const apiUrl = '/api/recipes';
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
