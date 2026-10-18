@@ -247,31 +247,33 @@
         }, 2500);
     }
 
+    // 보안: 사용자 입력과 AI 응답을 HTML로 해석하지 않도록 이스케이프합니다.
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // 상단 '내 냉장고 속 재료' 렌더링
     function renderSelectedIngredients() {
         const container = document.getElementById('selectedIngredientsContainer');
         const emptyMsg = document.getElementById('emptyIngredientsMsg');
-        
-        if (myIngredients.size === 0) {
-            container.innerHTML = '';
-            container.appendChild(emptyMsg);
-            emptyMsg.style.display = 'block';
-            return;
-        }
-
-        emptyMsg.style.display = 'none';
         container.innerHTML = '';
-        
+        if (myIngredients.size === 0) { container.appendChild(emptyMsg); emptyMsg.style.display = 'block'; return; }
+        emptyMsg.style.display = 'none';
         myIngredients.forEach(item => {
             const span = document.createElement('span');
             span.className = 'tag-enter inline-flex items-center gap-1 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full text-sm font-medium border border-orange-200 shadow-sm';
-            span.innerHTML = `
-                ${item}
-                <button onclick="removeIngredient('${item}')" class="text-orange-400 hover:text-orange-600 focus:outline-none ml-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            `;
-            container.appendChild(span);
+            const text = document.createElement('span'); text.textContent = item;
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'text-orange-400 hover:text-orange-600 focus:outline-none ml-1';
+            removeBtn.type = 'button'; removeBtn.setAttribute('aria-label', item + ' 삭제');
+            removeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+            removeBtn.addEventListener('click', () => removeIngredient(item));
+            span.append(text, removeBtn); container.appendChild(span);
         });
     }
 
@@ -466,88 +468,28 @@
 
     // 추천 결과 카드 화면에 그리기
     function renderRecipeCards() {
-        const container = document.getElementById('recipeCardsContainer');
-        container.innerHTML = '';
-
+        const container = document.getElementById('recipeCardsContainer'); container.innerHTML = '';
         recipeResultsData.forEach((recipe, index) => {
-            let chefBadge = '';
-            if (recipe.chefStyle && recipe.chefStyle.trim() !== '') {
-                chefBadge = `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded border border-red-200 ml-2">👨‍🍳 ${recipe.chefStyle} 스타일</span>`;
-            }
-
+            const chefBadge = recipe.chefStyle && recipe.chefStyle.trim() !== '' ? '<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded border border-red-200 ml-2">👨‍🍳 ' + escapeHtml(recipe.chefStyle) + ' 스타일</span>' : '';
             const card = document.createElement('div');
             card.className = 'bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden cursor-pointer hover:shadow-lg hover:border-orange-200 transition-all active:scale-[0.98]';
-            card.onclick = () => openModal(index);
-            
-            card.innerHTML = `
-                <div class="p-5 flex flex-col justify-between h-full">
-                    <div>
-                        <div class="flex items-start justify-between mb-2">
-                            <h3 class="text-lg font-bold text-gray-800 break-keep leading-tight">${recipe.recipeName} ${chefBadge}</h3>
-                            <div class="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 mb-3">
-                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md">
-                                ⏱️ ${recipe.time}
-                            </span>
-                            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md">
-                                ⭐ 난이도: ${recipe.difficulty}
-                            </span>
-                        </div>
-                        <p class="text-sm text-gray-600 line-clamp-2 bg-gray-50 p-2 rounded">${recipe.tips}</p>
-                    </div>
-                </div>
-            `;
+            card.addEventListener('click', () => openModal(index));
+            card.innerHTML = '<div class="p-5 flex flex-col justify-between h-full"><div><div class="flex items-start justify-between mb-2"><h3 class="text-lg font-bold text-gray-800 break-keep leading-tight">' + escapeHtml(recipe.recipeName) + ' ' + chefBadge + '</h3><div class="w-8 h-8 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">›</div></div><div class="flex gap-2 mb-3"><span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md">⏱️ ' + escapeHtml(recipe.time) + '</span><span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-md">⭐ 난이도: ' + escapeHtml(recipe.difficulty) + '</span></div><p class="text-sm text-gray-600 line-clamp-2 bg-gray-50 p-2 rounded">' + escapeHtml(recipe.tips) + '</p></div></div>';
             container.appendChild(card);
         });
     }
 
     // 모달 열기
     function openModal(index) {
-        const recipe = recipeResultsData[index];
-        currentViewingRecipe = recipe;
-        
-        document.getElementById('modalTitle').innerText = recipe.recipeName;
-        
-        // 메타 데이터 바인딩
-        let chefHtml = recipe.chefStyle ? `<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded border border-red-200">👨‍🍳 ${recipe.chefStyle} 스타일</span>` : '';
-        document.getElementById('modalMeta').innerHTML = `
-            ${chefHtml}
-            <span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">⏱️ ${recipe.time}</span>
-            <span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">⭐ 난이도: ${recipe.difficulty}</span>
-        `;
-        
-        // 재료 목록 바인딩
-        const ingList = document.getElementById('modalIngredients');
-        ingList.innerHTML = recipe.ingredientsList.map(item => `<li>${item}</li>`).join('');
-        
-        // 순서 바인딩
-        const stepsContainer = document.getElementById('modalSteps');
-        stepsContainer.innerHTML = recipe.steps.map((step, idx) => `
-            <div class="flex gap-3">
-                <div class="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-                    ${idx + 1}
-                </div>
-                <p class="text-sm text-gray-700 leading-relaxed pt-0.5">${step}</p>
-            </div>
-        `).join('');
-        
-        // 팁 바인딩
-        document.getElementById('modalTips').innerText = recipe.tips;
-
-        // 모달 표시 애니메이션
-        const modal = document.getElementById('recipeModal');
-        const content = document.getElementById('recipeModalContent');
-        
-        modal.classList.remove('hidden');
-        // 강제 리플로우
-        void modal.offsetWidth;
-        
-        modal.classList.remove('opacity-0');
-        modal.classList.add('opacity-100');
-        content.classList.remove('translate-y-full');
+        const recipe = recipeResultsData[index]; currentViewingRecipe = recipe;
+        document.getElementById('modalTitle').textContent = recipe.recipeName || '레시피';
+        const chefHtml = recipe.chefStyle ? '<span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded border border-red-200">👨‍🍳 ' + escapeHtml(recipe.chefStyle) + ' 스타일</span>' : '';
+        document.getElementById('modalMeta').innerHTML = chefHtml + '<span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">⏱️ ' + escapeHtml(recipe.time) + '</span><span class="bg-gray-100 text-gray-700 text-xs font-bold px-2 py-1 rounded">⭐ 난이도: ' + escapeHtml(recipe.difficulty) + '</span>';
+        document.getElementById('modalIngredients').innerHTML = (Array.isArray(recipe.ingredientsList) ? recipe.ingredientsList : []).map(item => '<li>' + escapeHtml(item) + '</li>').join('');
+        document.getElementById('modalSteps').innerHTML = (Array.isArray(recipe.steps) ? recipe.steps : []).map((step, idx) => '<div class="flex gap-3"><div class="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">' + (idx + 1) + '</div><p class="text-sm text-gray-700 leading-relaxed pt-0.5">' + escapeHtml(step) + '</p></div>').join('');
+        document.getElementById('modalTips').textContent = recipe.tips || '';
+        const modal = document.getElementById('recipeModal'); const content = document.getElementById('recipeModalContent');
+        modal.classList.remove('hidden'); void modal.offsetWidth; modal.classList.remove('opacity-0'); modal.classList.add('opacity-100'); content.classList.remove('translate-y-full');
     }
 
     // 모달 닫기
